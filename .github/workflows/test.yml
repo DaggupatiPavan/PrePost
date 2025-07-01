@@ -1,0 +1,26 @@
+name: Pre/Post Operation Sample Workflow
+
+on:
+  workflow_dispatch:
+    inputs:
+      debug:
+        description: 'Enable debug mode'
+        required: false
+        default: 'false'
+
+jobs:
+  pre_post_job:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Pre-Op Step
+        uses: ./.github/actions/pre-op
+        with:
+          debug: ${{ inputs.debug }}
+
+      - name: Main Job Logic
+        run: |
+          echo "Doing the main work here..."
+          sleep 2
+
+      - name: Post-Op Step
+        uses: ./.github/actions/post-op
