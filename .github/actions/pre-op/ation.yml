@@ -1,0 +1,34 @@
+name: "Pre-Op Action"
+description: "Collects metadata like input parameters, start time, debug mode"
+inputs:
+  debug:
+    description: 'Enable debug mode'
+    required: false
+    default: 'false'
+runs:
+  using: "composite"
+  steps:
+    - name: Set Start Time
+      run: echo "START_TIME=$(date -u +'%Y-%m-%dT%H:%M:%SZ')" >> $GITHUB_ENV
+      shell: bash
+
+    - name: Collect Input Parameters
+      run: |
+        echo "---- INPUT PARAMETERS ----"
+        for var in $(env); do
+          if [[ $var == INPUT_* ]]; then
+            key=$(echo $var | cut -d= -f1)
+            value=$(echo $var | cut -d= -f2-)
+            echo "$key=$value"
+          fi
+        done
+      shell: bash
+
+    - name: Check Debug Mode
+      run: |
+        if [[ "${{ inputs.debug }}" == "true" ]]; then
+          echo "DEBUG_MODE=true" >> $GITHUB_ENV
+        else
+          echo "DEBUG_MODE=false" >> $GITHUB_ENV
+        fi
+      shell: bash
