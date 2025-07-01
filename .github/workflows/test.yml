@@ -14,10 +14,12 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+
       - name: Pre-Op Step
         uses: ./.github/actions/pre-op
         with:
           debug: ${{ inputs.debug }}
+
 
       - name: Main Job Logic
         run: |
