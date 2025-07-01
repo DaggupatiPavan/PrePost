@@ -1,10 +1,11 @@
 name: "Pre-Op Action"
-description: "Collects metadata like input parameters, start time, debug mode"
+description: "Collects metadata and saves as JSON"
 inputs:
   debug:
     description: 'Enable debug mode'
     required: false
     default: 'false'
+
 runs:
   using: "composite"
   steps:
@@ -12,23 +13,31 @@ runs:
       run: echo "START_TIME=$(date -u +'%Y-%m-%dT%H:%M:%SZ')" >> $GITHUB_ENV
       shell: bash
 
-    - name: Collect Input Parameters
+    - name: Collect Inputs and Save JSON
       run: |
-        echo "---- INPUT PARAMETERS ----"
+        mkdir -p metadata
+        START_TIME=$(date -u +'%Y-%m-%dT%H:%M:%SZ')
+        DEBUG_MODE="${{ inputs.debug }}"
+        
+        # Collect input parameters
+        echo "{" > metadata/pre_op.json
+        echo "  \"start_time\": \"$START_TIME\"," >> metadata/pre_op.json
+        echo "  \"debug_mode\": \"$DEBUG_MODE\"," >> metadata/pre_op.json
+        echo "  \"inputs\": {" >> metadata/pre_op.json
+
+        input_lines=""
         for var in $(env); do
           if [[ $var == INPUT_* ]]; then
-            key=$(echo $var | cut -d= -f1)
+            key=$(echo $var | cut -d= -f1 | sed 's/^INPUT_//' | tr '[:upper:]' '[:lower:]')
             value=$(echo $var | cut -d= -f2-)
-            echo "$key=$value"
+            input_lines+="    \"$key\": \"$value\",\n"
           fi
         done
-      shell: bash
 
-    - name: Check Debug Mode
-      run: |
-        if [[ "${{ inputs.debug }}" == "true" ]]; then
-          echo "DEBUG_MODE=true" >> $GITHUB_ENV
-        else
-          echo "DEBUG_MODE=false" >> $GITHUB_ENV
-        fi
+        # Remove last comma
+        input_lines=$(echo -e "$input_lines" | sed '$s/,$//')
+
+        echo -e "$input_lines" >> metadata/pre_op.json
+        echo "  }" >> metadata/pre_op.json
+        echo "}" >> metadata/pre_op.json
       shell: bash
