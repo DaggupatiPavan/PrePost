@@ -7,6 +7,18 @@ on:
         description: 'Enable debug mode'
         required: false
         default: 'false'
+      environment:
+        description: 'Target environment (dev/stage/prod)'
+        required: true
+        default: 'dev'
+      region:
+        description: 'Deployment region'
+        required: false
+        default: 'us-east-1'
+      feature_flag:
+        description: 'Enable specific feature'
+        required: false
+        default: 'off'
 
 jobs:
   pre_post_job:
@@ -15,16 +27,17 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Pre-Op Step
+      - name: Pre-Op Step (Dynamic Inputs)
         uses: ./.github/actions/pre-op
-        with:
-          debug: ${{ inputs.debug }}
 
+      - name: Upload Pre-Op Metadata as Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: pre-op-metadata
+          path: metadata/pre_op.json
 
       - name: Main Job Logic
-        run: |
-          echo "Doing the main work here..."
-          sleep 2
+        run: echo "Main job logic"
 
       - name: Post-Op Step
         uses: ./.github/actions/post-op
