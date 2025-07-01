@@ -1,28 +1,15 @@
 name: "Pre-Op Action"
-description: "Collects metadata and saves as JSON"
-inputs:
-  debug:
-    description: 'Enable debug mode'
-    required: false
-    default: 'false'
-
+description: "Collects all INPUT_* env vars dynamically"
 runs:
   using: "composite"
   steps:
-    - name: Set Start Time
-      run: echo "START_TIME=$(date -u +'%Y-%m-%dT%H:%M:%SZ')" >> $GITHUB_ENV
-      shell: bash
-
-    - name: Collect Inputs and Save JSON
+    - name: Generate Pre-Op JSON Dynamically
       run: |
         mkdir -p metadata
         START_TIME=$(date -u +'%Y-%m-%dT%H:%M:%SZ')
-        DEBUG_MODE="${{ inputs.debug }}"
-        
-        # Collect input parameters
+
         echo "{" > metadata/pre_op.json
         echo "  \"start_time\": \"$START_TIME\"," >> metadata/pre_op.json
-        echo "  \"debug_mode\": \"$DEBUG_MODE\"," >> metadata/pre_op.json
         echo "  \"inputs\": {" >> metadata/pre_op.json
 
         input_lines=""
@@ -34,10 +21,12 @@ runs:
           fi
         done
 
-        # Remove last comma
+        # Trim trailing comma
         input_lines=$(echo -e "$input_lines" | sed '$s/,$//')
 
         echo -e "$input_lines" >> metadata/pre_op.json
         echo "  }" >> metadata/pre_op.json
         echo "}" >> metadata/pre_op.json
+
+        echo "START_TIME=$START_TIME" >> $GITHUB_ENV
       shell: bash
